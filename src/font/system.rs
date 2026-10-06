@@ -133,6 +133,10 @@ pub struct FontSystem {
     /// The locale of the system.
     locale: String,
 
+    /// Optical size in points used to normalize the `opsz` axis when
+    /// rasterizing glyphs. `None` means no override.
+    pub(crate) optical_size: Option<f32>,
+
     /// The underlying font database.
     db: fontdb::Database,
 
@@ -257,6 +261,7 @@ impl FontSystem {
 
         Self {
             locale,
+            optical_size: None,
             db,
             monospace_font_ids,
             per_script_monospace_font_ids,
@@ -280,6 +285,18 @@ impl FontSystem {
     /// Get the locale.
     pub fn locale(&self) -> &str {
         &self.locale
+    }
+
+    /// Set or clear the optical size in points used when rasterizing glyphs.
+    ///
+    /// Fonts with an `opsz` axis are normalized to this size, which lets text
+    /// render with the optical size instead of the display size, matching
+    /// platform text rendering. Only glyphs rasterized after the call are
+    /// affected: the glyph cache is keyed without the optical size, so an
+    /// already-cached glyph keeps its rasterization. Set this before the
+    /// first rasterization.
+    pub fn set_optical_size(&mut self, points: Option<f32>) {
+        self.optical_size = points;
     }
 
     /// Get the database.

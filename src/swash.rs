@@ -25,21 +25,42 @@ fn swash_image(
         return None;
     };
 
-    let variable_width = font
-        .as_swash()
-        .variations()
-        .find_by_tag(swash::Tag::from_be_bytes(*b"wght"));
+    let swash_font = font.as_swash();
+    let variations = swash_font.variations();
+    let variable_width = variations.find_by_tag(swash::Tag::from_be_bytes(*b"wght"));
+    let variable_optical_size = variations.find_by_tag(swash::Tag::from_be_bytes(*b"opsz"));
+    let optical_size = font_system.optical_size;
 
     // Build the scaler
     let mut scaler = context
-        .builder(font.as_swash())
+        .builder(swash_font)
         .size(f32::from_bits(cache_key.font_size_bits))
         .hint(!cache_key.flags.contains(CacheKeyFlags::DISABLE_HINTING));
-    if let Some(variation) = variable_width {
-        scaler = scaler.normalized_coords(font.as_swash().variations().normalized_coords([(
+    let weight_setting = variable_width.map(|variation| {
+        (
             swash::Tag::from_be_bytes(*b"wght"),
-            f32::from(cache_key.font_weight.0).clamp(variation.min_value(), variation.max_value()),
-        )]));
+            f32::from(cache_key.font_weight.0)
+                .clamp(variation.min_value(), variation.max_value()),
+        )
+    });
+    let optical_size_setting = match (variable_optical_size, optical_size) {
+        (Some(variation), Some(points)) => Some((
+            swash::Tag::from_be_bytes(*b"opsz"),
+            points.clamp(variation.min_value(), variation.max_value()),
+        )),
+        _ => None,
+    };
+    match (weight_setting, optical_size_setting) {
+        (Some(wght), Some(opsz)) => {
+            scaler = scaler.normalized_coords(variations.normalized_coords([wght, opsz]));
+        }
+        (Some(wght), None) => {
+            scaler = scaler.normalized_coords(variations.normalized_coords([wght]));
+        }
+        (None, Some(opsz)) => {
+            scaler = scaler.normalized_coords(variations.normalized_coords([opsz]));
+        }
+        (None, None) => {}
     }
     let mut scaler = scaler.build();
 
@@ -91,21 +112,42 @@ fn swash_outline_commands(
         return None;
     };
 
-    let variable_width = font
-        .as_swash()
-        .variations()
-        .find_by_tag(swash::Tag::from_be_bytes(*b"wght"));
+    let swash_font = font.as_swash();
+    let variations = swash_font.variations();
+    let variable_width = variations.find_by_tag(swash::Tag::from_be_bytes(*b"wght"));
+    let variable_optical_size = variations.find_by_tag(swash::Tag::from_be_bytes(*b"opsz"));
+    let optical_size = font_system.optical_size;
 
     // Build the scaler
     let mut scaler = context
-        .builder(font.as_swash())
+        .builder(swash_font)
         .size(f32::from_bits(cache_key.font_size_bits))
         .hint(!cache_key.flags.contains(CacheKeyFlags::DISABLE_HINTING));
-    if let Some(variation) = variable_width {
-        scaler = scaler.normalized_coords(font.as_swash().variations().normalized_coords([(
+    let weight_setting = variable_width.map(|variation| {
+        (
             swash::Tag::from_be_bytes(*b"wght"),
-            f32::from(cache_key.font_weight.0).clamp(variation.min_value(), variation.max_value()),
-        )]));
+            f32::from(cache_key.font_weight.0)
+                .clamp(variation.min_value(), variation.max_value()),
+        )
+    });
+    let optical_size_setting = match (variable_optical_size, optical_size) {
+        (Some(variation), Some(points)) => Some((
+            swash::Tag::from_be_bytes(*b"opsz"),
+            points.clamp(variation.min_value(), variation.max_value()),
+        )),
+        _ => None,
+    };
+    match (weight_setting, optical_size_setting) {
+        (Some(wght), Some(opsz)) => {
+            scaler = scaler.normalized_coords(variations.normalized_coords([wght, opsz]));
+        }
+        (Some(wght), None) => {
+            scaler = scaler.normalized_coords(variations.normalized_coords([wght]));
+        }
+        (None, Some(opsz)) => {
+            scaler = scaler.normalized_coords(variations.normalized_coords([opsz]));
+        }
+        (None, None) => {}
     }
     let mut scaler = scaler.build();
 

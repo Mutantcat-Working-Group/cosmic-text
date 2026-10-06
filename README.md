@@ -5,6 +5,15 @@
 ![license](https://img.shields.io/crates/l/cosmic-text.svg)
 [![Rust workflow](https://github.com/pop-os/cosmic-text/workflows/Rust/badge.svg?event=push)](https://github.com/pop-os/cosmic-text/actions)
 
+> This is a fork maintained by the Mutantcat Working Group. The
+> `lightbookinput-opsz` branch tracks upstream 0.19.0 and adds
+> `FontSystem::set_optical_size`, which normalizes the font `opsz` axis when
+> rasterizing glyphs so small text renders with the optical size rather than
+> the display size. Note that the glyph cache key does not include the optical
+> size, so the value must be set before glyphs are first rasterized. If
+> upstream merges this, this branch and the `[patch.crates-io]` override in
+> dependent projects can be dropped.
+
 Pure Rust multi-line text handling.
 
 COSMIC Text provides advanced text shaping, layout, and rendering wrapped up
